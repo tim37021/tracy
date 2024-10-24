@@ -251,7 +251,7 @@ private:
     void DrawPlotPoint( const ImVec2& wpos, float x, float y, int offset, uint32_t color, bool hover, double val, PlotValueFormatting format, float PlotHeight );
     void DrawOptions();
     void DrawMessages();
-    void DrawMessageLine( const MessageData& msg, bool hasCallstack, int& idx );
+    void DrawMessageLine( const MessageData& msg, bool hasCallstack, int& idx, std::optional<uint32_t> color );
     void DrawFindZone();
     void AccumulationModeComboBox();
     void DrawStatistics();
@@ -472,6 +472,7 @@ private:
     int m_frameHover = -1;
     bool m_messagesScrollBottom;
     ImGuiTextFilter m_messageFilter;
+    std::vector<float> m_messageFilterColors;
     bool m_showMessageImages = false;
     int m_visibleMessages = 0;
     size_t m_prevMessages = 0;

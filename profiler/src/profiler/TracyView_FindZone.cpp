@@ -218,9 +218,11 @@ void View::DrawZoneList( int id, const Vector<short_ptr<ZoneEvent>>& zones )
             if( ImGui::Selectable( TimeToStringExact( ev->Start() ), m_zoneInfoWindow == ev, ImGuiSelectableFlags_SpanAllColumns ) )
             {
                 ShowZoneInfo( *ev );
+                CenterAtTime( ev->Start() );
             }
             if( ImGui::IsItemHovered() )
             {
+                m_highlight = Region { true, ev->Start(), ev->End() };
                 m_zoneHighlight = ev;
                 if( IsMouseClicked( 2 ) )
                 {

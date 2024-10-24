@@ -2,6 +2,7 @@
 #include "TracyPrint.hpp"
 #include "TracyTexture.hpp"
 #include "TracyView.hpp"
+#include <format>
 
 namespace tracy
 {
@@ -22,16 +23,40 @@ void View::DrawMessages()
         return;
     }
 
-    bool filterChanged = m_messageFilter.Draw( ICON_FA_FILTER " Filter messages", 200 );
+    bool filterChanged = m_messageFilter.Draw( ICON_FA_FILTER " ## Filter messages" );
     ImGui::SameLine();
     if( ImGui::Button( ICON_FA_DELETE_LEFT " Clear" ) )
     {
         m_messageFilter.Clear();
         filterChanged = true;
     }
-    ImGui::SameLine();
-    ImGui::Spacing();
-    ImGui::SameLine();
+
+    ImGui::NewLine();
+    
+    m_messageFilterColors.resize( m_messageFilter.Filters.size() * 3 );
+
+    auto filtersText = std::string_view(m_messageFilter.InputBuf);
+    for( int i = 0; i < m_messageFilter.Filters.size(); i++ )
+    {
+        auto filterText = filtersText.substr(m_messageFilter.Filters[i].b-m_messageFilter.InputBuf, m_messageFilter.Filters[i].e - m_messageFilter.Filters[i].b);
+        auto color = &m_messageFilterColors[i*3];
+        ImGui::SameLine();
+
+        if( ImGui::ColorButton( std::format("{}##FilterColorButton", filterText).c_str(), ImVec4( color[0], color[1], color[2], 1.0f ),
+                                ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop ) )
+        {
+            ImGui::OpenPopup(std::format("{}##FilterColorPopup", filterText).c_str());
+        }
+        if( ImGui::BeginPopup( std::format("{}##FilterColorPopup", filterText).c_str() ) )
+        {
+            ImGui::ColorPicker3( std::format("{}##FilterColor", filterText).c_str(), color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel );
+            ImGui::EndPopup();
+        }
+        ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted( m_messageFilter.Filters[i].b, m_messageFilter.Filters[i].e );
+    }
+
     TextFocused( "Total message count:", RealToString( msgs.size() ) );
     ImGui::SameLine();
     ImGui::Spacing();
@@ -200,7 +225,7 @@ void View::DrawMessages()
     ImGui::Separator();
     ImGui::BeginChild( "##messages" );
     const int colNum = hasCallstack ? 4 : 3;
-    if( ImGui::BeginTable( "##messages", colNum, ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Hideable ) )
+    if( ImGui::BeginTable( "##messages", colNum, ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Hideable | ImGuiTableFlags_RowBg ) )
     {
         ImGui::TableSetupScrollFreeze( 0, 1 );
         ImGui::TableSetupColumn( "Time", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize );
@@ -214,7 +239,7 @@ void View::DrawMessages()
         {
             for( const auto& msgIdx : m_msgList )
             {
-                DrawMessageLine( *msgs[msgIdx], hasCallstack, idx );
+                DrawMessageLine( *msgs[msgIdx], hasCallstack, idx, std::nullopt );
             }
         }
         else
@@ -225,7 +250,10 @@ void View::DrawMessages()
             {
                 for( auto i=clipper.DisplayStart; i<clipper.DisplayEnd; i++ )
                 {
-                    DrawMessageLine( *msgs[m_msgList[i]], hasCallstack, idx );
+                    int index = m_messageFilter.PassFilterIndex(m_worker.GetString(msgs[m_msgList[i]]->ref));
+                    const uint32_t color = index == -1 || index*3+2 >= m_messageFilterColors.size() ? IM_COL32( 0, 0, 0, 255 ) : 
+                        IM_COL32( m_messageFilterColors[index*3] * 255, m_messageFilterColors[index*3+1] * 255, m_messageFilterColors[index*3+2] * 255, 255 ); 
+                    DrawMessageLine( *msgs[m_msgList[i]], hasCallstack, idx, color );
                 }
             }
         }
@@ -240,9 +268,14 @@ void View::DrawMessages()
     ImGui::End();
 }
 
-void View::DrawMessageLine( const MessageData& msg, bool hasCallstack, int& idx )
+void View::DrawMessageLine( const MessageData& msg, bool hasCallstack, int& idx, std::optional<uint32_t> color )
 {
     ImGui::TableNextRow();
+    // Set the background color if provided
+    if (color.has_value())
+    {
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, color.value());
+    }
     ImGui::TableNextColumn();
     const auto text = m_worker.GetString( msg.ref );
     const auto tid = m_worker.DecompressThread( msg.thread );

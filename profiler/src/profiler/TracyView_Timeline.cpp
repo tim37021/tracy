@@ -529,6 +529,17 @@ void View::DrawTimeline()
     {
         auto& io = ImGui::GetIO();
         DrawLine( draw, ImVec2( io.MousePos.x + 0.5f, linepos.y + 0.5f ), ImVec2( io.MousePos.x + 0.5f, linepos.y + lineh + 0.5f ), 0x33FFFFFF );
+    } else if (m_msgHighlight) {
+        const auto s = m_msgHighlight->time;
+        DrawLine( draw, ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y ), ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + lineh ), 0x33FFFFFF );
+    }
+
+    if( /*m_drawMessageEvents*/ 1 )
+    {
+        const auto& msgs = m_worker.GetMessages();
+        for( const auto& msgIdx : m_msgList )
+        {
+        }
     }
 
     if( m_highlightZoom.active && m_highlightZoom.start != m_highlightZoom.end )

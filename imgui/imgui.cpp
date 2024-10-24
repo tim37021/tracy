@@ -2761,6 +2761,40 @@ void ImGuiTextFilter::Build()
     }
 }
 
+int ImGuiTextFilter::PassFilterIndex(const char* text, const char* text_end) const
+{
+    if (Filters.empty())
+        return INT_MAX;
+
+    if (text == NULL)
+        text = "";
+
+    for (int i=0; i<Filters.size(); i++)
+    {
+        const ImGuiTextRange &f = Filters[i];
+        if (f.empty())
+            continue;
+        if (f.b[0] == '-')
+        {
+            // Subtract
+            if (ImStristr(text, text_end, f.b + 1, f.e) != NULL)
+                return -1;
+        }
+        else
+        {
+            // Grep
+            if (ImStristr(text, text_end, f.b, f.e) != NULL)
+                return i;
+        }
+    }
+
+    // Implicit * grep
+    if (CountGrep == 0)
+        return INT_MAX;
+
+    return -1;
+}
+
 bool ImGuiTextFilter::PassFilter(const char* text, const char* text_end) const
 {
     if (Filters.empty())

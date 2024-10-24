@@ -2530,7 +2530,10 @@ struct ImGuiTextFilter
 {
     IMGUI_API           ImGuiTextFilter(const char* default_filter = "");
     IMGUI_API bool      Draw(const char* label = "Filter (inc,-exc)", float width = 0.0f);  // Helper calling InputText+Build
-    IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
+    IMGUI_API bool     PassFilter(const char* text, const char* text_end = NULL) const;
+    // Return the passed filter index, -1 nothing passed.
+    // If it return Filter.Size, it means the filter is empty.
+    IMGUI_API int       PassFilterIndex(const char* text, const char* text_end = NULL) const;
     IMGUI_API void      Build();
     void                Clear()          { InputBuf[0] = 0; Build(); }
     bool                IsActive() const { return !Filters.empty(); }

@@ -299,6 +299,10 @@ void View::DrawZoneInfoWindow()
     ImGui::Begin( "Zone info", &show, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse );
     if( !ImGui::GetCurrentWindowRead()->SkipItems )
     {
+        if( ImGui::Button( ICON_FA_MICROSCOPE " Go to" ) )
+        {
+            CenterAtTime( ev.Start() );
+        }
         if( ImGui::Button( ICON_FA_MICROSCOPE " Zoom to zone" ) )
         {
             ZoomToZone( ev );
