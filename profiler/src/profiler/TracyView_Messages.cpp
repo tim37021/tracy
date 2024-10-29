@@ -34,28 +34,40 @@ void View::DrawMessages()
     ImGui::NewLine();
     
     m_messageFilterColors.resize( m_messageFilter.Filters.size() * 3 );
-
     auto filtersText = std::string_view(m_messageFilter.InputBuf);
     for( int i = 0; i < m_messageFilter.Filters.size(); i++ )
     {
         auto filterText = filtersText.substr(m_messageFilter.Filters[i].b-m_messageFilter.InputBuf, m_messageFilter.Filters[i].e - m_messageFilter.Filters[i].b);
-        auto color = &m_messageFilterColors[i*3];
         ImGui::SameLine();
 
-        if( ImGui::ColorButton( std::format("{}##FilterColorButton", filterText).c_str(), ImVec4( color[0], color[1], color[2], 1.0f ),
+        auto colorIt = m_colorMap.find(filterText);
+        float *color = nullptr;
+        if (colorIt == m_colorMap.cend()) {
+            auto &entry = m_colorMap[std::string(filterText)];
+            entry = ImVec4(0.f, 0.f, 0.f, 1.0f);
+            color = &entry.x;
+        } else {
+            color = &colorIt->second.x;
+        }
+        
+        if( ImGui::ColorButton( std::format("{}##FilterColorButton", i).c_str(), ImVec4( color[0], color[1], color[2], 1.0f ),
                                 ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop ) )
         {
-            ImGui::OpenPopup(std::format("{}##FilterColorPopup", filterText).c_str());
+            ImGui::OpenPopup(std::format("{}##FilterColorPopup", i).c_str());
         }
-        if( ImGui::BeginPopup( std::format("{}##FilterColorPopup", filterText).c_str() ) )
+        if( ImGui::BeginPopup( std::format("{}##FilterColorPopup", i).c_str() ) )
         {
-            ImGui::ColorPicker3( std::format("{}##FilterColor", filterText).c_str(), color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel );
+            ImGui::ColorPicker3( std::format("{}##FilterColor", i).c_str(), color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel );
             ImGui::EndPopup();
         }
         ImGui::SameLine();
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted( m_messageFilter.Filters[i].b, m_messageFilter.Filters[i].e );
+
+        memcpy(&m_messageFilterColors[i*3], color, sizeof(float) * 3);
     }
+
+    // TODO: Garbage collection for colorMap
 
     TextFocused( "Total message count:", RealToString( msgs.size() ) );
     ImGui::SameLine();

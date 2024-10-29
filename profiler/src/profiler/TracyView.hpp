@@ -473,6 +473,15 @@ private:
     bool m_messagesScrollBottom;
     ImGuiTextFilter m_messageFilter;
     std::vector<float> m_messageFilterColors;
+    struct string_hash
+    {
+        using is_transparent = void;
+        [[nodiscard]] size_t operator()( const char* txt ) const { return std::hash<std::string_view>{}( txt ); }
+        [[nodiscard]] size_t operator()( std::string_view txt ) const { return std::hash<std::string_view>{}( txt ); }
+        [[nodiscard]] size_t operator()( const std::string& txt ) const { return std::hash<std::string>{}( txt ); }
+    };
+    std::unordered_map<std::string, ImVec4, string_hash, std::equal_to<>> m_colorMap;
+
     bool m_showMessageImages = false;
     int m_visibleMessages = 0;
     size_t m_prevMessages = 0;
