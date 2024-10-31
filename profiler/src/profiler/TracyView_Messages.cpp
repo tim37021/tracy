@@ -31,15 +31,17 @@ void View::DrawMessages()
         filterChanged = true;
     }
 
-    ImGui::NewLine();
+    if (m_messageFilter.IsActive()) {
+        ImGui::NewLine();
+    }
     
     m_messageFilterColors.resize( m_messageFilter.Filters.size() * 3 );
     auto filtersText = std::string_view(m_messageFilter.InputBuf);
     for( int i = 0; i < m_messageFilter.Filters.size(); i++ )
     {
-        auto filterText = filtersText.substr(m_messageFilter.Filters[i].b-m_messageFilter.InputBuf, m_messageFilter.Filters[i].e - m_messageFilter.Filters[i].b);
         ImGui::SameLine();
 
+        auto filterText = filtersText.substr(m_messageFilter.Filters[i].b-m_messageFilter.InputBuf, m_messageFilter.Filters[i].e - m_messageFilter.Filters[i].b);
         auto colorIt = m_colorMap.find(filterText);
         float *color = nullptr;
         if (colorIt == m_colorMap.cend()) {
