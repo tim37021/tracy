@@ -165,6 +165,7 @@ if(SELF_PROFILE)
 endif()
 
 if(WIN32)
+    message(${PROJECT_NAME})
     set(PROFILER_FILES ${PROFILER_FILES}
         win32/Tracy.manifest
         win32/Tracy.rc
@@ -178,7 +179,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE TracyServer TracyImGui)
 
 add_custom_target(git-ref
-    COMMAND python3 ${CMAKE_CURRENT_LIST_DIR}/../extra/git-ref.py
+    COMMAND python ${CMAKE_CURRENT_LIST_DIR}/../extra/git-ref.py
     BYPRODUCTS GitRef.hpp
 )
 add_dependencies(${PROJECT_NAME} git-ref)
