@@ -534,11 +534,21 @@ void View::DrawTimeline()
         DrawLine( draw, ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y ), ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + lineh ), 0x33FFFFFF );
     }
 
-    if( /*m_drawMessageEvents*/ 1 )
+
+    if( m_messageFilter.IsActive() )
     {
         const auto& msgs = m_worker.GetMessages();
         for( const auto& msgIdx : m_msgList )
         {
+            const auto s = msgs[msgIdx]->time;
+            const auto x = wpos.x + ( s - m_vd.zvStart ) * pxns;
+            
+            auto index = m_messageFilter.PassFilterIndex(m_worker.GetString(msgs[msgIdx]->ref));
+            if (!(index == -1 || index*3+2 >= m_messageFilterColors.size())) {
+                draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ),
+                                     IM_COL32( m_messageFilterColors[index * 3] * 255, m_messageFilterColors[index * 3 + 1] * 255,
+                                               m_messageFilterColors[index * 3 + 2] * 255, 255 ) );
+            }
         }
     }
 

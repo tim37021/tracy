@@ -239,7 +239,7 @@ void View::DrawMessages()
     ImGui::Separator();
     ImGui::BeginChild( "##messages" );
     const int colNum = hasCallstack ? 4 : 3;
-    if( ImGui::BeginTable( "##messages", colNum, ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Hideable | ImGuiTableFlags_RowBg ) )
+    if( ImGui::BeginTable( "##messages", colNum, ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Hideable ) )
     {
         ImGui::TableSetupScrollFreeze( 0, 1 );
         ImGui::TableSetupColumn( "Time", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize );
@@ -266,7 +266,7 @@ void View::DrawMessages()
                 {
                     int index = m_messageFilter.PassFilterIndex(m_worker.GetString(msgs[m_msgList[i]]->ref));
                     const uint32_t color = index == -1 || index*3+2 >= m_messageFilterColors.size() ? IM_COL32( 0, 0, 0, 255 ) : 
-                        IM_COL32( m_messageFilterColors[index*3] * 255, m_messageFilterColors[index*3+1] * 255, m_messageFilterColors[index*3+2] * 255, 255 ); 
+                        IM_COL32( m_messageFilterColors[index*3] * 255, m_messageFilterColors[index*3+1] * 255, m_messageFilterColors[index*3+2] * 255, 128 ); 
                     DrawMessageLine( *msgs[m_msgList[i]], hasCallstack, idx, color );
                 }
             }
