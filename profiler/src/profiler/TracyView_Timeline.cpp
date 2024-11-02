@@ -531,23 +531,55 @@ void View::DrawTimeline()
         DrawLine( draw, ImVec2( io.MousePos.x + 0.5f, linepos.y + 0.5f ), ImVec2( io.MousePos.x + 0.5f, linepos.y + lineh + 0.5f ), 0x33FFFFFF );
     } else if (m_msgHighlight) {
         const auto s = m_msgHighlight->time;
-        DrawLine( draw, ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y ), ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + lineh ), 0x33FFFFFF );
+        const int th = 10;
+        unsigned int color = 0xFFDDDDDD;
+        draw->AddTriangleFilled( ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns - 7, linepos.y ),
+                                 ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns + 7, linepos.y ),
+                                 ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + th ), color );
+        DrawLine( draw, ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y ),
+                  ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + lineh ), 0x33FFFFFF );
+        draw->AddTriangleFilled( ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns - 7, linepos.y + lineh ),
+                                 ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns + 7, linepos.y + lineh ),
+                                 ImVec2( wpos.x + ( s - m_vd.zvStart ) * pxns, linepos.y + lineh - th ), color );
     }
-
 
     if( m_messageFilter.IsActive() )
     {
+        int hoveredMsg = -1;
         const auto& msgs = m_worker.GetMessages();
         for( const auto& msgIdx : m_msgList )
         {
             const auto s = msgs[msgIdx]->time;
             const auto x = wpos.x + ( s - m_vd.zvStart ) * pxns;
             
-            auto index = m_messageFilter.PassFilterIndex(m_worker.GetString(msgs[msgIdx]->ref));
-            if (!(index == -1 || index*3+2 >= m_messageFilterColors.size())) {
-                draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ),
-                                     IM_COL32( m_messageFilterColors[index * 3] * 255, m_messageFilterColors[index * 3 + 1] * 255,
-                                               m_messageFilterColors[index * 3 + 2] * 255, 255 ) );
+            auto text = m_worker.GetString(msgs[msgIdx]->ref);
+            auto index = m_messageFilter.PassFilterIndex( text );
+            auto color = IM_COL32( m_messageFilterColors[index * 3] * 255, m_messageFilterColors[index * 3 + 1] * 255,
+                                   m_messageFilterColors[index * 3 + 2] * 255, 255 );
+            if( !( index == -1 || index * 3 + 2 >= m_messageFilterColors.size() ) )
+            {
+                if( ImGui::IsMouseHoveringRect( ImVec2( x - 2, linepos.y ), ImVec2( x + 2, linepos.y + lineh ) ) )
+                {
+                    draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ),
+                                         color & 0xFFFFFFBB );
+                    if( hoveredMsg == -1 )
+                    {
+
+                        m_msgHighlight = msgs[msgIdx];
+                        if( ImGui::IsMouseReleased( 0 ) )
+                        {
+                            m_showMessages = true;
+                            m_msgToFocus = msgs[msgIdx];
+                        }
+                    }
+
+                    hoveredMsg = msgIdx;
+                    ImGui::BeginTooltip();
+                    ImGui::TextUnformatted( text );
+                    ImGui::EndTooltip();
+                } else {
+                    draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ), color );
+                }
             }
         }
     }
