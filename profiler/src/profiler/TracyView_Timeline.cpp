@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <unordered_set>
 
 #include "TracyImGui.hpp"
 #include "TracyMouse.hpp"
@@ -547,6 +548,9 @@ void View::DrawTimeline()
     {
         int hoveredMsg = -1;
         const auto& msgs = m_worker.GetMessages();
+        double last_x = 0;
+        std::unordered_set<int> drawnTypes;
+        // TODO: use binary search to find the first and last message to display on screen
         for( const auto& msgIdx : m_msgList )
         {
             const auto s = msgs[msgIdx]->time;
@@ -558,10 +562,17 @@ void View::DrawTimeline()
                                    m_messageFilterColors[index * 3 + 2] * 255, 255 );
             if( !( index == -1 || index * 3 + 2 >= m_messageFilterColors.size() ) )
             {
-                if( ImGui::IsMouseHoveringRect( ImVec2( x - 2, linepos.y ), ImVec2( x + 2, linepos.y + lineh ) ) )
+                if( std::abs( last_x - x ) >= 1 || drawnTypes.find( index ) == drawnTypes.end() )
                 {
                     draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ),
                                          color & 0xFFFFFFBB );
+                    if( std::abs( last_x - x ) >= 1 ) drawnTypes.clear();
+                    drawnTypes.insert( index );
+                    last_x = x;
+                }
+                if( ImGui::IsMouseHoveringRect( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ) ) )
+                {
+
                     if( hoveredMsg == -1 )
                     {
 
@@ -577,8 +588,6 @@ void View::DrawTimeline()
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted( text );
                     ImGui::EndTooltip();
-                } else {
-                    draw->AddRectFilled( ImVec2( x - 1, linepos.y ), ImVec2( x + 1, linepos.y + lineh ), color );
                 }
             }
         }
